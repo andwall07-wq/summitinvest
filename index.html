@@ -44,10 +44,10 @@ footer{text-align:center;font-size:11px;color:#9aa4ae;margin:30px 0}
 <label>Password</label><input id="pw" type="password">
 <button type="submit">Sign In</button><div id="err"></div></form></div>
 <header><div class="logo">Summit<span>Invest</span></div>
-<nav><a class="active" href="#">Portfolio</a><a href="#">Activity</a><a href="#">Transfers</a><a href="#">Research</a><a href="#" onclick="logout();return false">Log out</a></nav></header>
+<nav><a class="active" href="#" data-tab="portfolio">Portfolio</a><a href="#" data-tab="activity">Activity</a><a href="#" data-tab="transfers">Transfers</a><a href="#" data-tab="research">Research</a><a href="#" onclick="logout();return false">Log out</a></nav></header>
 <main>
 <div class="acct">Individual Brokerage · <span contenteditable="true">Andrew Wallace</span> · As of <span id="asof"></span></div>
-<div class="top">
+<section id="tab-portfolio"><div class="top">
  <div class="card"><div class="label">Total Account Value</div><div class="big" id="total"></div>
   <div id="gain" style="font-size:16px;font-weight:600"></div>
   <div class="stats"><div><span class="label">Invested</span><b id="cost"></b></div>
@@ -61,6 +61,19 @@ footer{text-align:center;font-size:11px;color:#9aa4ae;margin:30px 0}
  <table><thead><tr><th>Symbol</th><th>Name</th><th>Shares</th><th>Avg Cost</th><th>Price</th><th>Market Value</th><th>Gain/Loss</th><th>% of Acct</th><th></th></tr></thead><tbody id="rows"></tbody></table>
  <div class="hint">Click any cell to edit. Changes save automatically in this browser.</div>
 </div>
+</section>
+<section id="tab-activity" hidden><div class="card"><div class="label">Account Activity</div>
+<table><thead><tr><th>Date</th><th>Type</th><th>Description</th><th>Quantity</th><th>Price</th><th style="text-align:right">Amount</th></tr></thead><tbody id="actrows"></tbody></table></div></section>
+<section id="tab-transfers" hidden><div class="top"><div class="card"><div class="label">Move Money</div>
+<form onsubmit="return doTransfer(event)" style="margin-top:14px;display:grid;gap:12px;max-width:380px">
+<label style="font-size:13px">Type<select id="ttype" style="width:100%;padding:9px;margin-top:4px;border:1px solid #c9d3de;border-radius:6px"><option>Deposit</option><option>Withdrawal</option></select></label>
+<label style="font-size:13px">From / To<select style="width:100%;padding:9px;margin-top:4px;border:1px solid #c9d3de;border-radius:6px"><option>Checking ••••4821</option><option>Savings ••••7730</option></select></label>
+<label style="font-size:13px">Amount<input id="tamt" type="number" min="0.01" step="0.01" placeholder="0.00" style="width:100%;padding:9px;margin-top:4px;border:1px solid #c9d3de;border-radius:6px"></label>
+<button type="submit">Submit Transfer</button><div id="tmsg" style="font-size:13px"></div></form></div>
+<div class="card"><div class="label">Available Cash</div><div class="big" id="tcash"></div><div class="hint">Deposits add to cash and withdrawals take from it. Transfers here are simulated and only change the numbers on this page.</div></div></div></section>
+<section id="tab-research" hidden><div class="card"><div class="label">Research Your Holdings</div>
+<div style="margin:14px 0"><input id="rq" placeholder="Look up any ticker, e.g. TSLA" style="padding:9px;width:260px;border:1px solid #c9d3de;border-radius:6px"> <button onclick="lookup()">Look up</button></div>
+<table><thead><tr><th>Symbol</th><th>Name</th><th>Your Price</th><th>Your Return</th><th>Links</th></tr></thead><tbody id="resrows"></tbody></table></div></section>
 </main><footer>SummitInvest is a demo portfolio page. Not a real brokerage.</footer>
 <script>
 const COLORS=["#0d2b45","#3ec28f","#4c8bf5","#f5a623","#9b59b6","#e05d5d","#17a2b8","#7f8c8d","#c0a062","#2ecc71"];
@@ -94,7 +107,7 @@ function render(){
 }
 function addRow(){data.push(["NEW","Company name",1,100,100]);save();render()}
 function delRow(i){data.splice(i,1);save();render()}
-function reset(){data=SAMPLE.map(a=>[...a]);document.getElementById("cash").value="0";save();render()}
+function reset(){act=defaultAct();saveAct();data=SAMPLE.map(a=>[...a]);document.getElementById("cash").value="0";save();render()}
 document.getElementById("cash").addEventListener("change",()=>{save();render()});
 document.getElementById("asof").textContent=new Date().toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"});
 const USER="andwall07",PASS_HASH="d64a7dcf4fd1fdfd9338cdf246f962b326bdc34ed55f0f46b4b8f25cc7d4c7da";
@@ -104,4 +117,23 @@ sha(p).then(h=>{if(u===USER&&h===PASS_HASH){sessionStorage.setItem("in","1");doc
 function logout(){sessionStorage.removeItem("in");location.reload()}
 if(sessionStorage.getItem("in"))document.getElementById("login").style.display="none";
 render();
+
+function showTab(t){document.querySelectorAll("main section").forEach(x=>x.hidden=x.id!=="tab-"+t);document.querySelectorAll("nav a[data-tab]").forEach(a=>a.classList.toggle("active",a.dataset.tab===t));renderTabs();location.hash=t}
+document.querySelectorAll("nav a[data-tab]").forEach(a=>a.addEventListener("click",e=>{e.preventDefault();showTab(a.dataset.tab)}));
+function defaultAct(){const d=new Date(),out=[];const day=n=>{const x=new Date(d);x.setDate(x.getDate()-n);return x.toISOString().slice(0,10)};
+ let tc=0;data.forEach(r=>tc+=r[2]*r[3]);out.push([day(120),"Deposit","Transfer from Checking ••••4821","","",tc]);
+ data.forEach((r,i)=>out.push([day(118-i*9),"Buy",r[0]+" · "+r[1],r[2],r[3],-r[2]*r[3]]));return out.reverse()}
+let act=JSON.parse(localStorage.getItem("pfact")||"null")||defaultAct();
+function saveAct(){localStorage.setItem("pfact",JSON.stringify(act))}
+function renderTabs(){const cash=parseFloat(document.getElementById("cash").value)||0;document.getElementById("tcash").textContent=$(cash);
+ document.getElementById("actrows").innerHTML=act.map(a=>`<tr><td>${a[0]}</td><td>${a[1]}</td><td>${a[2]}</td><td>${a[3]}</td><td>${a[4]===""?"":$(+a[4])}</td><td style="text-align:right" class="${a[5]>=0?"pos":""}">${(a[5]>=0?"+":"-")+$(Math.abs(a[5]))}</td></tr>`).join("");
+ document.getElementById("resrows").innerHTML=data.map(r=>{const g=r[3]?(r[4]/r[3]-1)*100:0;return `<tr><td><b>${r[0]}</b></td><td>${r[1]}</td><td>${$(r[4])}</td><td class="${g>=0?"pos":"neg"}">${pct(g)}</td><td><a href="https://finance.yahoo.com/quote/${r[0]}" target="_blank">Quote</a> · <a href="https://finance.yahoo.com/quote/${r[0]}/news" target="_blank">News</a></td></tr>`}).join("")}
+function doTransfer(e){e.preventDefault();const amt=parseFloat(document.getElementById("tamt").value)||0,type=document.getElementById("ttype").value,c=document.getElementById("cash"),cur=parseFloat(c.value)||0,m=document.getElementById("tmsg");
+ if(amt<=0){m.textContent="Enter an amount.";m.className="neg";return false}
+ if(type==="Withdrawal"&&amt>cur){m.textContent="Not enough cash for that withdrawal.";m.className="neg";return false}
+ c.value=(type==="Deposit"?cur+amt:cur-amt).toFixed(2);act.unshift([new Date().toISOString().slice(0,10),type,(type==="Deposit"?"Transfer from":"Transfer to")+" Checking ••••4821","","",type==="Deposit"?amt:-amt]);
+ saveAct();save();render();renderTabs();m.textContent=type+" of "+$(amt)+" completed.";m.className="pos";document.getElementById("tamt").value="";return false}
+function lookup(){const t=document.getElementById("rq").value.trim().toUpperCase();if(t)window.open("https://finance.yahoo.com/quote/"+t,"_blank")}
+const _r=render;render=function(){_r();if(typeof act!=="undefined")renderTabs()};
+const h=location.hash.slice(1);if(["activity","transfers","research"].includes(h))showTab(h);else renderTabs();
 </script></body></html>
