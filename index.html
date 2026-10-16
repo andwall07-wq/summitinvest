@@ -97,8 +97,10 @@ function delRow(i){data.splice(i,1);save();render()}
 function reset(){data=SAMPLE.map(a=>[...a]);document.getElementById("cash").value="0";save();render()}
 document.getElementById("cash").addEventListener("change",()=>{save();render()});
 document.getElementById("asof").textContent=new Date().toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"});
-const USER="andrew",PASS="summit16k";
-function doLogin(e){e.preventDefault();if(document.getElementById("u").value.trim().toLowerCase()===USER&&document.getElementById("pw").value===PASS){sessionStorage.setItem("in","1");document.getElementById("login").style.display="none"}else{document.getElementById("err").textContent="Incorrect username or password."}return false}
+const USER="andwall07",PASS_HASH="d64a7dcf4fd1fdfd9338cdf246f962b326bdc34ed55f0f46b4b8f25cc7d4c7da";
+async function sha(t){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(t));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("")}
+function doLogin(e){e.preventDefault();const u=document.getElementById("u").value.trim().toLowerCase(),p=document.getElementById("pw").value;
+sha(p).then(h=>{if(u===USER&&h===PASS_HASH){sessionStorage.setItem("in","1");document.getElementById("login").style.display="none"}else{document.getElementById("err").textContent="Incorrect username or password."}});return false}
 function logout(){sessionStorage.removeItem("in");location.reload()}
 if(sessionStorage.getItem("in"))document.getElementById("login").style.display="none";
 render();
