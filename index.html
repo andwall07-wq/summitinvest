@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Portfolio Overview</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:#f4f6f9;color:#1b2430}
+header{background:#0d2b45;color:#fff;padding:14px 32px;display:flex;align-items:center;justify-content:space-between}
+.logo{font-weight:700;font-size:20px;letter-spacing:.5px}.logo span{color:#3ec28f}
+nav a{color:#c9d6e3;margin-left:22px;text-decoration:none;font-size:14px}nav a.active{color:#fff;border-bottom:2px solid #3ec28f;padding-bottom:4px}
+main{max-width:1150px;margin:28px auto;padding:0 20px}
+.top{display:grid;grid-template-columns:2fr 1fr;gap:20px}
+.card{background:#fff;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,.08);padding:22px}
+.label{font-size:13px;color:#6b7785;text-transform:uppercase;letter-spacing:.6px}
+.big{font-size:40px;font-weight:700;margin:6px 0}
+.pos{color:#1a9d63}.neg{color:#d64545}
+.stats{display:flex;gap:40px;margin-top:16px}.stats div b{display:block;font-size:18px;margin-top:4px}
+.donut-wrap{display:flex;align-items:center;gap:18px}
+.legend{font-size:13px;line-height:1.9}.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px}
+table{width:100%;border-collapse:collapse;margin-top:12px;font-size:14px}
+th{text-align:left;color:#6b7785;font-weight:600;font-size:12px;text-transform:uppercase;padding:10px 8px;border-bottom:1px solid #e3e8ee}
+td{padding:10px 8px;border-bottom:1px solid #f0f2f5}
+td input{width:100%;border:1px solid transparent;background:transparent;font:inherit;padding:4px;border-radius:4px}
+td input:hover,td input:focus{border-color:#c9d3de;background:#fafbfc;outline:none}
+.sym input{font-weight:700}
+.row-head{display:flex;justify-content:space-between;align-items:center;margin-top:24px}
+button{background:#0d2b45;color:#fff;border:0;border-radius:6px;padding:8px 14px;cursor:pointer;font-size:13px}
+button.ghost{background:#e9eef3;color:#0d2b45}.del{background:none;color:#b0b8c2;font-size:16px;padding:2px 6px}.del:hover{color:#d64545}
+.acct{font-size:13px;color:#6b7785;margin-bottom:14px}
+.hint{font-size:12px;color:#8a95a2;margin-top:10px}
+@media(max-width:800px){.top{grid-template-columns:1fr}}
+#login{position:fixed;inset:0;background:linear-gradient(135deg,#0d2b45,#14466e);display:flex;align-items:center;justify-content:center;z-index:10}
+.lbox{background:#fff;border-radius:12px;padding:36px;width:360px;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+.lbox .logo{color:#0d2b45;text-align:center;font-size:26px;margin-bottom:6px}
+.lbox p{text-align:center;color:#6b7785;font-size:14px;margin-bottom:22px}
+.lbox label{font-size:13px;color:#4a5562;display:block;margin:12px 0 4px}
+.lbox input{width:100%;padding:11px;border:1px solid #c9d3de;border-radius:6px;font-size:15px}
+.lbox button{width:100%;margin-top:20px;padding:12px;font-size:15px;background:#3ec28f}
+#err{color:#d64545;font-size:13px;margin-top:10px;text-align:center;min-height:16px}
+footer{text-align:center;font-size:11px;color:#9aa4ae;margin:30px 0}
+</style></head><body>
+<div id="login"><form class="lbox" onsubmit="return doLogin(event)">
+<div class="logo">Summit<span>Invest</span></div><p>Sign in to your account</p>
+<label>Username</label><input id="u" autocomplete="off">
+<label>Password</label><input id="pw" type="password">
+<button type="submit">Sign In</button><div id="err"></div></form></div>
+<header><div class="logo">Summit<span>Invest</span></div>
+<nav><a class="active" href="#">Portfolio</a><a href="#">Activity</a><a href="#">Transfers</a><a href="#">Research</a><a href="#" onclick="logout();return false">Log out</a></nav></header>
+<main>
+<div class="acct">Individual Brokerage · <span contenteditable="true">Andrew Wallace</span> · As of <span id="asof"></span></div>
+<div class="top">
+ <div class="card"><div class="label">Total Account Value</div><div class="big" id="total"></div>
+  <div id="gain" style="font-size:16px;font-weight:600"></div>
+  <div class="stats"><div><span class="label">Invested</span><b id="cost"></b></div>
+  <div><span class="label">Cash</span><b><input id="cash" style="border:0;font:inherit;width:120px" value="0"></b></div>
+  <div><span class="label">Holdings</span><b id="count"></b></div></div></div>
+ <div class="card"><div class="label">Allocation</div><div class="donut-wrap"><svg id="donut" width="150" height="150" viewBox="0 0 42 42"></svg><div class="legend" id="legend"></div></div></div>
+</div>
+<div class="card" style="margin-top:20px">
+ <div class="row-head" style="margin-top:0"><div class="label">Positions</div>
+ <div><button class="ghost" onclick="reset()">Reset to sample</button> <button onclick="addRow()">+ Add position</button></div></div>
+ <table><thead><tr><th>Symbol</th><th>Name</th><th>Shares</th><th>Avg Cost</th><th>Price</th><th>Market Value</th><th>Gain/Loss</th><th>% of Acct</th><th></th></tr></thead><tbody id="rows"></tbody></table>
+ <div class="hint">Click any cell to edit. Changes save automatically in this browser.</div>
+</div>
+</main><footer>SummitInvest is a demo portfolio page. Not a real brokerage.</footer>
+<script>
+const COLORS=["#0d2b45","#3ec28f","#4c8bf5","#f5a623","#9b59b6","#e05d5d","#17a2b8","#7f8c8d","#c0a062","#2ecc71"];
+const SAMPLE=[["AAPL","Apple Inc.",15,180,195],["MSFT","Microsoft Corp.",6,400,418],["NVDA","NVIDIA Corp.",20,120,131],["AMZN","Amazon.com Inc.",12,175,182],["GOOGL","Alphabet Inc. Cl A",12,160,166],["VOO","Vanguard S&P 500 ETF",4,480,497],["JPM","JPMorgan Chase & Co.",8,200,207],["KO","Coca-Cola Co.",16,60,62]];
+let data=JSON.parse(localStorage.getItem("pf")||"null")||SAMPLE.map(a=>[...a]);
+document.getElementById("cash").value=localStorage.getItem("pfcash")||"0";
+const $=n=>"$"+n.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
+const pct=n=>(n>=0?"+":"")+n.toFixed(2)+"%";
+function save(){localStorage.setItem("pf",JSON.stringify(data));localStorage.setItem("pfcash",document.getElementById("cash").value)}
+function render(){
+ const cash=parseFloat(document.getElementById("cash").value)||0;
+ let tv=0,tc=0;data.forEach(r=>{tv+=r[2]*r[4];tc+=r[2]*r[3]});
+ const total=tv+cash,g=tv-tc,gp=tc?g/tc*100:0;
+ document.getElementById("total").textContent=$(total);
+ const ge=document.getElementById("gain");ge.textContent=(g>=0?"+":"")+$(g).replace("$-","-$")+" ("+pct(gp)+") all time";ge.className=g>=0?"pos":"neg";
+ document.getElementById("cost").textContent=$(tc);document.getElementById("count").textContent=data.length;
+ const tb=document.getElementById("rows");tb.innerHTML="";
+ data.forEach((r,i)=>{const mv=r[2]*r[4],gl=mv-r[2]*r[3],glp=r[3]?(r[4]/r[3]-1)*100:0;
+  const tr=document.createElement("tr");
+  tr.innerHTML=`<td class="sym"><input value="${r[0]}" data-i="${i}" data-k="0"></td><td><input value="${r[1]}" data-i="${i}" data-k="1"></td>
+  <td><input value="${r[2]}" data-i="${i}" data-k="2"></td><td><input value="${r[3]}" data-i="${i}" data-k="3"></td><td><input value="${r[4]}" data-i="${i}" data-k="4"></td>
+  <td>${$(mv)}</td><td class="${gl>=0?"pos":"neg"}">${(gl>=0?"+":"-")+$(Math.abs(gl))}<br><small>${pct(glp)}</small></td>
+  <td>${total?(mv/total*100).toFixed(1):0}%</td><td><button class="del" onclick="delRow(${i})">×</button></td>`;tb.appendChild(tr)});
+ tb.querySelectorAll("input").forEach(el=>el.addEventListener("change",e=>{const i=+e.target.dataset.i,k=+e.target.dataset.k;
+  data[i][k]=k>=2?(parseFloat(e.target.value)||0):(k==0?e.target.value.toUpperCase():e.target.value);save();render()}));
+ const svg=document.getElementById("donut"),lg=document.getElementById("legend");svg.innerHTML='<circle cx="21" cy="21" r="15.9" fill="none" stroke="#eef1f4" stroke-width="6"/>';lg.innerHTML="";
+ let off=25;const parts=data.map(r=>[r[0],r[2]*r[4]]);if(cash>0)parts.push(["Cash",cash]);
+ parts.forEach((p,i)=>{const v=total?p[1]/total*100:0,c=COLORS[i%COLORS.length];
+  svg.innerHTML+=`<circle cx="21" cy="21" r="15.9" fill="none" stroke="${c}" stroke-width="6" stroke-dasharray="${v} ${100-v}" stroke-dashoffset="${off}"/>`;off-=v;
+  lg.innerHTML+=`<div><i style="background:${c}"></i>${p[0]} ${v.toFixed(1)}%</div>`});
+}
+function addRow(){data.push(["NEW","Company name",1,100,100]);save();render()}
+function delRow(i){data.splice(i,1);save();render()}
+function reset(){data=SAMPLE.map(a=>[...a]);document.getElementById("cash").value="0";save();render()}
+document.getElementById("cash").addEventListener("change",()=>{save();render()});
+document.getElementById("asof").textContent=new Date().toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"});
+const USER="andrew",PASS="summit16k";
+function doLogin(e){e.preventDefault();if(document.getElementById("u").value.trim().toLowerCase()===USER&&document.getElementById("pw").value===PASS){sessionStorage.setItem("in","1");document.getElementById("login").style.display="none"}else{document.getElementById("err").textContent="Incorrect username or password."}return false}
+function logout(){sessionStorage.removeItem("in");location.reload()}
+if(sessionStorage.getItem("in"))document.getElementById("login").style.display="none";
+render();
+</script></body></html>
